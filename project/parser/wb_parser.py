@@ -21,17 +21,16 @@ class WBParser:
           total_price=[]
           basic_price = []
           wb_data = []
+          pr = None
           for i, item in data['data'].items():
                try:
                     for c in item:
-                         for t in c['sizes']:
-                               total_price.append(t['price']['total']/100)
-                               basic_price.append(t['price']['basic']/100)
-                         wb_data.append((c['name'],
-                         basic_price[0],
-                         total_price[0],
-                         c['supplierRating'],
-                         c['feedbacks']))
+                         wb_data.append((
+                              c['name'],
+                              c['sizes'][0]['price']['basic']/100,
+                              c['sizes'][0]['price']['total']/100,
+                              c['supplierRating'],
+                              c['feedbacks']))
                except:
                     print('Неполная информация')
           return wb_data
@@ -48,3 +47,5 @@ class WBParser:
           wb_data = []
           wb_data.extend(self.get_wb_by_link(link))
           self.save_to_db(wb_data)
+
+
