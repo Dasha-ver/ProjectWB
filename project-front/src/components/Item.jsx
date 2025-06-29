@@ -1,4 +1,4 @@
-import styles from './item.module.scss';
+import styles from './components.module.scss';
 
 const Item = (props) => {
 
