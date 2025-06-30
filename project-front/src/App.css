@@ -1,0 +1,41 @@
+.products-table{
+   width: 100%;
+   padding: 30px;
+}
+.col{
+  outline: thin solid #696969;
+  padding: 10px 15px 10px 15px;
+}
+
+.range-slider-td{
+    width: 1000px;
+    }
+
+.range-slider-table{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    }
+
+.range-slider-min-value-td{
+    padding-top: 20px;
+    padding-right: 5px;
+    }
+
+.range-slider-max-value-td{
+    padding-top: 20px;
+    padding-left: 5px;
+    }
+
+.symbol{
+    color: #696969;
+    font-weight: 600;
+    font-size: 20px;
+    }
+
+.founder{
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  gap: 20px;
+}
