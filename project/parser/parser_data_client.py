@@ -59,3 +59,5 @@ class WBSqlite3Client(DataClient):
              f"INSERT INTO {table_name} (name, price, discount_price, rating, reviews_count) VALUES ('{name}', '{price}', '{discount_price}', '{rating}', '{reviews_count}')")
         conn.commit()
 
+
+

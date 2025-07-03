@@ -9,15 +9,19 @@ import SortForm from './components/SortForm'
 import Histogram from './components/Histogram'
 import "@progress/kendo-theme-material/dist/all.css";
 import "hammerjs";
+import RatingDiscountChart from './components/Chart'
 
 const API_URL_WB = 'http://127.0.0.1:8000/api/products/'
-const API_COUNT_URL_WB = 'http://127.0.0.1:8000/api/product-count/'
+const API_COUNT_URL_WB = 'http://127.0.0.1:8000/api/product-count'
 
 function App() {
 
   const [products, setProducts] = useState([])
   const [value, setValue] = useState({ min: 0, max: 10000 });
   const [quantity, setQuantity] = useState({ one: [], two: [], three:[], four:[], five:[] });
+  const [productData, setProductData] = useState([]);
+  const [filterItem, setFilterItem] = useState()
+  const [item, setItem] = useState()
 
   async function getProducts(minPrice, maxPrice) {
         const response = await axios.get(API_URL_WB+'?price__range='+minPrice+','+maxPrice)
@@ -27,18 +31,43 @@ function App() {
   async function getProductsForRating(rating) {
         const response = await axios.get(API_URL_WB+'?rating__gte='+rating)
         setProducts(response.data)
-        const one = await axios.get(API_COUNT_URL_WB+'?price_from=0&price_to=50&rating='+rating)
-        const two = await axios.get(API_COUNT_URL_WB+'?price_from=50&price_to=100&rating='+rating)
-        const three = await axios.get(API_COUNT_URL_WB+'?price_from=100&price_to=150&rating='+rating)
-        const four = await axios.get(API_COUNT_URL_WB+'?price_from=150&price_to=200&rating='+rating)
-        const five = await axios.get(API_COUNT_URL_WB+'?price_from=200&price_to=250&rating='+rating)
+        const one = await axios.get(API_COUNT_URL_WB+'-rating/?price_from=0&price_to=50&rating='+rating)
+        const two = await axios.get(API_COUNT_URL_WB+'-rating/?price_from=50&price_to=100&rating='+rating)
+        const three = await axios.get(API_COUNT_URL_WB+'-rating/?price_from=100&price_to=150&rating='+rating)
+        const four = await axios.get(API_COUNT_URL_WB+'-rating/?price_from=150&price_to=200&rating='+rating)
+        const five = await axios.get(API_COUNT_URL_WB+'-rating/?price_from=200&price_to=250&rating='+rating)
         setQuantity({one:one.data.product_count, two:two.data.product_count, three:three.data.product_count, four:four.data.product_count,
                       five:five.data.product_count,})
-    }
+        let floatRating =parseFloat(rating)
+        const newMap = [];
+        for (let i = floatRating; i < 4.9; i+=0.1) {
+            let discount = await axios.get(API_COUNT_URL_WB+'-sale/?rating='+i.toFixed(1))
+            newMap.push({rating: i.toFixed(1) , discount: discount.data})
+        }
+        setProductData(newMap)
+
+}
 
   async function getProductsForFeedbacks(feedbacks) {
         const response = await axios.get(API_URL_WB+'?reviews_count__gte='+feedbacks)
         setProducts(response.data)
+        const one = await axios.get(API_COUNT_URL_WB+'-reviews/?price_from=0&price_to=50&reviews='+feedbacks)
+        const two = await axios.get(API_COUNT_URL_WB+'-reviews/?price_from=50&price_to=100&reviews='+feedbacks)
+        const three = await axios.get(API_COUNT_URL_WB+'-reviews/?price_from=100&price_to=150&reviews='+feedbacks)
+        const four = await axios.get(API_COUNT_URL_WB+'-reviews/?price_from=150&price_to=200&reviews='+feedbacks)
+        const five = await axios.get(API_COUNT_URL_WB+'-reviews/?price_from=200&price_to=250&reviews='+feedbacks)
+        setQuantity({one:one.data.product_count, two:two.data.product_count, three:three.data.product_count, four:four.data.product_count,
+                      five:five.data.product_count,})
+        const discountForOne = await axios.get(API_COUNT_URL_WB+'-reviews-sale/?reviews='+feedbacks+'&rating_from=1&rating_to=2')
+        const discountForTwo = await axios.get(API_COUNT_URL_WB+'-reviews-sale/?reviews='+feedbacks+'&rating_from=2&rating_to=3')
+        const discountForThree = await axios.get(API_COUNT_URL_WB+'-reviews-sale/?reviews='+feedbacks+'&rating_from=3&rating_to=4')
+        const discountForFour = await axios.get(API_COUNT_URL_WB+'-reviews-sale/?reviews='+feedbacks+'&rating_from=4&rating_to=5')
+        console.log(discountForFour.data)
+        setProductData([{rating:1, discount: discountForOne.data},
+                        {rating:2, discount: discountForTwo.data},
+                        {rating:3, discount: discountForThree.data},
+                        {rating:4, discount: discountForFour.data}])
+
     }
 
   async function getProductsForSorting(value) {
@@ -46,12 +75,12 @@ function App() {
         setProducts(response.data)
   }
 
-  const handleChangeRatingFrom = (rating) => {
-    getProductsForRating(rating)
+  const handleChangeRatingFrom = () => {
+    getProductsForRating(filterItem)
   }
 
-  const handleChangeFeedbacksFrom = (feedbacks) => {
-    getProductsForFeedbacks(feedbacks)
+  const handleChangeFeedbacksFrom = () => {
+    getProductsForFeedbacks(filterItem)
   }
 
   const handleChangeSort = (value) => {
@@ -75,9 +104,13 @@ function App() {
 
     return(
         <div>
-          <div>
+          <div style={{display:'flex'}}>
             <Histogram data={histogramData}/>
+            <div>
+              <RatingDiscountChart data={productData}/>
+            </div>
           </div>
+          {item}
           <table class='range-slider-table'>
             <td class='range-slider-min-value-td'><td>{value.min} BYN</td><td class='symbol'>&gt;</td></td>
             <td class='range-slider-td'>
@@ -85,8 +118,8 @@ function App() {
             <td class='range-slider-max-value-td'><td class='symbol'>&lt;</td><td>{value.max} BYN</td></td>
           </table>
           <div class='founder'>
-          <FilterForm changed={handleChangeRatingFrom} placeholder='Рейтинг от'/>
-          <FilterForm changed={handleChangeFeedbacksFrom} placeholder='Количество отзывов от'/>
+          <FilterForm searchForItem={handleChangeRatingFrom} changed={setFilterItem} placeholder='Рейтинг от'/>
+          <FilterForm searchForItem={handleChangeFeedbacksFrom} changed={setFilterItem} placeholder='Количество отзывов от'/>
           <SortForm changed={handleChangeSort}/>
           </div>
           <table class='products-table'>
